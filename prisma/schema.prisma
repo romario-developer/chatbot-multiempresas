@@ -8,18 +8,19 @@ datasource db {
 }
 
 model Company {
-  id               String           @id @default(uuid())
-  name             String
-  legalName        String?
-  document         String?
-  deliveryEnabled  Boolean          @default(true)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  whatsappNumbers  WhatsappNumber[]
-  customers        Customer[]
-  menus            Menu[]
-  orders           Order[]
-  payments         Payment[]
+  id              String           @id @default(uuid())
+  name            String
+  legalName       String?
+  document        String?
+  deliveryEnabled Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  whatsappNumbers WhatsappNumber[]
+  customers       Customer[]
+  menus           Menu[]
+  orders          Order[]
+  payments        Payment[]
+  conversations   Conversation[]
 }
 
 model WhatsappNumber {
@@ -79,16 +80,16 @@ model MenuItem {
 }
 
 model Conversation {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid())
   companyId     String
   customerId    String
-  company       Company   @relation(fields: [companyId], references: [id])
-  customer      Customer  @relation(fields: [customerId], references: [id])
+  company       Company  @relation(fields: [companyId], references: [id])
+  customer      Customer @relation(fields: [customerId], references: [id])
   currentState  String
   context       Json?
-  lastMessageAt DateTime  @default(now())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([companyId, customerId])
 }
