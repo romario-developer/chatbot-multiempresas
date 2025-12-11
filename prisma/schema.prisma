@@ -3,139 +3,109 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model Company {
-  id              String           @id @default(uuid())
-  name            String
-  legalName       String?
-  document        String?
-  deliveryEnabled Boolean          @default(true)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  whatsappNumbers WhatsappNumber[]
-  customers       Customer[]
-  menus           Menu[]
-  orders          Order[]
-  payments        Payment[]
-  conversations   Conversation[]
+model User {
+  id           String           @id @default(uuid())
+  email        String           @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  roles        UserTenantRole[]
 }
 
-model WhatsappNumber {
-  id              String   @id @default(uuid())
-  companyId       String
-  company         Company  @relation(fields: [companyId], references: [id])
-  phoneNumber     String
-  waPhoneNumberId String
-  displayName     String?
-  welcomeMessage  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model Tenant {
+  id                   String                 @id @default(uuid())
+  name                 String
+  slug                 String?                @unique
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  users                UserTenantRole[]
+  whatsappIntegrations WhatsAppIntegration[]
+  webhookLogs          WebhookLog[]
+  messageLogs          MessageLog[]
 }
 
-model Customer {
-  id                     String         @id @default(uuid())
-  companyId              String
-  company                Company        @relation(fields: [companyId], references: [id])
-  phone                  String
-  name                   String?
-  defaultDeliveryAddress String?
-  timesOrdered           Int            @default(0)
-  lastOrderAt            DateTime?
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
-  conversations          Conversation[]
-  orders                 Order[]
+model UserTenantRole {
+  id        String   @id @default(uuid())
+  userId    String
+  tenantId  String
+  role      String   // owner | admin | member
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([companyId, phone])
+  user   User   @relation(fields: [userId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([userId, tenantId])
 }
 
-model Menu {
-  id          String     @id @default(uuid())
-  companyId   String
-  company     Company    @relation(fields: [companyId], references: [id])
-  title       String
-  description String?
-  imageUrl    String?
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  items       MenuItem[]
+model WhatsAppIntegration {
+  id                    String   @id @default(uuid())
+  tenantId              String
+  metaAppId             String
+  metaAppSecret         String?
+  metaUserId            String?
+  wabaId                String
+  phoneNumberId         String
+  phoneNumber           String
+  verifyTokenWebhook    String
+  accessTokenShortLived String?
+  accessTokenLongLived  String?
+  tokenExpiresAt        DateTime?
+  status                String   @default("disconnected")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tenant              Tenant              @relation(fields: [tenantId], references: [id])
+  webhookLogs         WebhookLog[]
+  messageLogs         MessageLog[]
+
+  @@unique([tenantId, phoneNumberId])
 }
 
-model MenuItem {
-  id          String   @id @default(uuid())
-  menuId      String
-  menu        Menu     @relation(fields: [menuId], references: [id])
-  name        String
-  description String?
-  price       Float
-  category    String?
-  position    Int?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model TenantAvailableNumber {
+  id                 String   @id @default(uuid())
+  tenantId           String
+  wabaId             String
+  phoneNumberId      String
+  displayPhoneNumber String?
+  verifiedName       String?
+  capabilities       Json?
+  createdAt          DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, phoneNumberId])
 }
 
-model Conversation {
-  id            String   @id @default(uuid())
-  companyId     String
-  customerId    String
-  company       Company  @relation(fields: [companyId], references: [id])
-  customer      Customer @relation(fields: [customerId], references: [id])
-  currentState  String
-  context       Json?
-  lastMessageAt DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model WebhookLog {
+  id                    String               @id @default(uuid())
+  tenantId              String
+  whatsappIntegrationId String?
+  eventType             String?
+  payload               Json
+  createdAt             DateTime             @default(now())
 
-  @@unique([companyId, customerId])
+  tenant              Tenant               @relation(fields: [tenantId], references: [id])
+  whatsappIntegration WhatsAppIntegration? @relation(fields: [whatsappIntegrationId], references: [id])
 }
 
-model Order {
-  id              String      @id @default(uuid())
-  companyId       String
-  customerId      String
-  company         Company     @relation(fields: [companyId], references: [id])
-  customer        Customer    @relation(fields: [customerId], references: [id])
-  status          String
-  totalAmount     Float       @default(0)
-  note            String?
-  deliveryAddress String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  items           OrderItem[]
-  payments        Payment[]
-}
+model MessageLog {
+  id                    String               @id @default(uuid())
+  tenantId              String
+  whatsappIntegrationId String?
+  messageId             String?
+  direction             String               // IN | OUT
+  status                String?
+  payload               Json?
+  to                    String?
+  from                  String?
+  createdAt             DateTime             @default(now())
 
-model OrderItem {
-  id         String   @id @default(uuid())
-  orderId    String
-  order      Order    @relation(fields: [orderId], references: [id])
-  menuItemId String?
-  name       String
-  unitPrice  Float
-  quantity   Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-}
-
-model Payment {
-  id                String   @id @default(uuid())
-  orderId           String
-  companyId         String
-  order             Order    @relation(fields: [orderId], references: [id])
-  company           Company  @relation(fields: [companyId], references: [id])
-  provider          String
-  providerPaymentId String
-  status            String
-  amount            Float
-  qrCode            String?
-  qrCodeBase64      String?
-  checkoutUrl       String?
-  rawPayload        Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  tenant              Tenant               @relation(fields: [tenantId], references: [id])
+  whatsappIntegration WhatsAppIntegration? @relation(fields: [whatsappIntegrationId], references: [id])
 }
