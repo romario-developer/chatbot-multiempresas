@@ -1,4 +1,4 @@
-// Serviço básico para tratar payloads do webhook do WhatsApp
+// Servico basico para tratar payloads do webhook do WhatsApp
 function handleWebhookPayload(payload) {
   if (!payload || payload.object !== 'whatsapp_business_account') {
     return;
@@ -16,7 +16,7 @@ function handleWebhookPayload(payload) {
         const from = message.from;
         const text = message.text?.body;
         console.log('[WhatsApp] Mensagem recebida', { from, text, messageId: message.id });
-        // TODO: adicionar roteamento para Conversation/Order a partir do conteúdo
+        // TODO: adicionar roteamento para Conversation/Order a partir do conteudo
       });
 
       statuses.forEach((status) => {
@@ -24,6 +24,7 @@ function handleWebhookPayload(payload) {
           id: status.id,
           status: status.status,
           timestamp: status.timestamp,
+          errors: status.errors,
         });
       });
     });

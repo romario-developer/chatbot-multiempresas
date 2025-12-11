@@ -5,9 +5,9 @@ const app = express();
 // Middleware para JSON
 app.use(express.json());
 
-// Rotas (substituir placeholders quando os módulos forem criados)
+// Rotas
 const whatsappRoutes = require('./routes/whatsapp');
-const paymentRoutes = express.Router(); // TODO: implementar rotas de pagamentos
+const paymentRoutes = require('./routes/payment');
 const adminRoutes = express.Router(); // TODO: implementar rotas de administração
 
 app.use('/webhook/whatsapp', whatsappRoutes);
