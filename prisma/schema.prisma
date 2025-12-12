@@ -25,6 +25,7 @@ model Tenant {
   updatedAt            DateTime               @updatedAt
   users                UserTenantRole[]
   whatsappIntegrations WhatsAppIntegration[]
+  availableNumbers     TenantAvailableNumber[]
   webhookLogs          WebhookLog[]
   messageLogs          MessageLog[]
 }
