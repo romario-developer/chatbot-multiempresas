@@ -19,20 +19,26 @@ export async function initOAuth(req: Request, res: Response) {
     return res.status(400).json({ error: 'tenantId or user missing' });
   }
 
-  const state: MetaOAuthState = { tenantId, userId };
+  const state: MetaOAuthState = {
+    tenantId,
+    userId,
+    nonce: crypto.randomBytes(16).toString('hex'),
+  };
   const stateParam = Buffer.from(JSON.stringify(state)).toString('base64url');
 
   const scopes = [
-    'whatsapp_business_messaging',
-    'whatsapp_business_management',
     'business_management',
-    'pages_show_list',
-  ];
+    'whatsapp_business_management',
+    'whatsapp_business_messaging',
+  ].join(',');
 
-  const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${META_APP_ID}` +
+  const authUrl =
+    'https://www.facebook.com/v19.0/dialog/oauth' +
+    `?client_id=${encodeURIComponent(META_APP_ID)}` +
     `&redirect_uri=${encodeURIComponent(OAUTH_REDIRECT_URI)}` +
-    `&state=${stateParam}` +
-    `&scope=${encodeURIComponent(scopes.join(','))}`;
+    `&state=${encodeURIComponent(stateParam)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scopes)}`;
 
   return res.json({ authUrl });
 }

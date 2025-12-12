@@ -28,6 +28,7 @@ model Tenant {
   availableNumbers     TenantAvailableNumber[]
   webhookLogs          WebhookLog[]
   messageLogs          MessageLog[]
+  availableNumbers     TenantAvailableNumber[]
 }
 
 model UserTenantRole {

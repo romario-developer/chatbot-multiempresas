@@ -1,6 +1,7 @@
 export type MetaOAuthState = {
   tenantId: string;
   userId: string;
+  nonce: string;
 };
 
 export type MetaAccessTokenResponse = {

@@ -1,6 +1,6 @@
 import { api } from './api';
 
-const TOKEN_KEY = 'auth_token';
+const TOKEN_KEY = 'token';
 
 function getToken() {
   return localStorage.getItem(TOKEN_KEY);
